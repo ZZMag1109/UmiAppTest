@@ -15,17 +15,23 @@ export const request: RequestConfig = {
   //响应拦截器
   // 1、统一处理接口请求出错和业务处理出错的情况
   responseInterceptors: [
-    (response: any) => {
-      if (response.status === 200) {
-        if (response.data && response.data.code === 0) {
-          message.error(response.data.msg);
-          // 返回一个pending状态的peomise,终端promise链
+    (response: any, options: any) => {
+      const data = response.json().then(
+        (resolve: any) => {
+          if (resolve.code === 0) {
+            // 业务出错处理
+            message.error(resolve.msg);
+            return new Promise(() => {});
+          }
+          return resolve.data;
+        },
+        (err: any) => {
+          // 请求出错处理
+          message.error(err);
           return new Promise(() => {});
-        }
-        return Promise.resolve(response);
-      } else {
-        return Promise.reject(response);
-      }
+        },
+      );
+      return data;
     },
   ],
 };
